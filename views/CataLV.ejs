@@ -1,0 +1,368 @@
+<%- include('partials/header') %>
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Opulent | Catálogo Louis Vuitton</title>
+    <style>
+      :root {
+        --bg: #0b0f14;
+        --text: #ffffff;
+        --text-muted: rgba(255, 255, 255, 0.8);
+        --hairline: rgba(255, 255, 255, 0.18);
+        --serif: "Didot", "Bodoni MT", "Bodoni 72", "Libre Baskerville", Baskerville, "Times New Roman",
+          Times, serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button {
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        border: 0;
+        padding: 0;
+      }
+
+      .page-hero {
+        min-height: 56vh;
+        width: 100%;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        background: #000000;
+        padding: 120px 22px 46px;
+      }
+
+      .page-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.55) 0%,
+          rgba(0, 0, 0, 0.18) 40%,
+          rgba(0, 0, 0, 0.72) 100%
+        );
+        z-index: 1;
+      }
+
+      .page-hero > div {
+        position: relative;
+        z-index: 2;
+      }
+
+      .page-hero-video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+      }
+
+      .page-kicker {
+        margin: 0 0 10px;
+        font-size: 12px;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.75);
+      }
+
+      .page-title {
+        margin: 0;
+        font-family: var(--serif);
+        font-size: clamp(38px, 6vw, 64px);
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .new-arrivals {
+        background: #ffffff;
+        color: rgba(11, 15, 20, 0.96);
+        padding: 72px 28px 96px;
+      }
+
+      .new-arrivals-inner {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+
+      .new-arrivals-header {
+        text-align: center;
+        margin: 0 0 34px;
+      }
+
+      .new-arrivals-kicker {
+        margin: 0 0 6px;
+        font-size: 11px;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: rgba(11, 15, 20, 0.62);
+      }
+
+      .new-arrivals-title {
+        margin: 0;
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: clamp(30px, 4.2vw, 44px);
+        letter-spacing: 0.01em;
+      }
+
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 26px;
+      }
+
+      .product-card {
+        display: grid;
+        gap: 12px;
+      }
+
+      .product-media {
+        position: relative;
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1 / 1;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.02));
+        border: 1px solid rgba(11, 15, 20, 0.08);
+        overflow: hidden;
+      }
+
+      .wishlist {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 36px;
+        height: 36px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 999px;
+        border: 1px solid rgba(11, 15, 20, 0.12);
+        background: rgba(255, 255, 255, 0.85);
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+        z-index: 2;
+      }
+
+      .wishlist:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.98);
+        border-color: rgba(11, 15, 20, 0.18);
+      }
+
+      .wishlist svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: rgba(11, 15, 20, 0.82);
+        stroke-width: 1.8;
+      }
+
+      .product-svg {
+        width: 70%;
+        height: 70%;
+        opacity: 0.55;
+      }
+
+      .product-svg * {
+        fill: none;
+        stroke: rgba(11, 15, 20, 0.55);
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .pm-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        z-index: 1;
+      }
+
+      .product-media.has-img .product-svg {
+        display: none;
+      }
+
+      .product-meta {
+        display: grid;
+        gap: 4px;
+      }
+
+      .product-name {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(11, 15, 20, 0.92);
+      }
+
+      .product-price {
+        margin: 0;
+        font-size: 12px;
+        color: rgba(11, 15, 20, 0.52);
+      }
+
+      @media (max-width: 1080px) {
+        .product-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .new-arrivals {
+          padding: 56px 14px 72px;
+        }
+
+        .product-grid {
+          grid-template-columns: 1fr;
+          gap: 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="page-hero" aria-label="Portada catálogo">
+        <video class="page-hero-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true" poster="../img/paris.png">
+          <source src="../img/lv/louisVuitton.mp4" type="video/mp4" />
+        </video>
+        <div>
+          <p class="page-kicker">CATALOGO</p>
+          <h1 class="page-title">Louis Vuitton</h1>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        const hydrateMedia = (root) => {
+          const medias = (root || document).querySelectorAll(".product-media[data-img]:not(.has-img)");
+          medias.forEach((el) => {
+            const src = el.getAttribute("data-img");
+            if (!src) return;
+            const img = document.createElement("img");
+            img.className = "pm-img";
+            img.loading = "lazy";
+            img.decoding = "async";
+            img.src = src;
+            img.alt = el.getAttribute("aria-label") || "Producto";
+            el.appendChild(img);
+            el.classList.add("has-img");
+          });
+        };
+
+        const grid = document.querySelector(".new-arrivals .product-grid");
+        const svgMarkup = `<svg class="product-svg" viewBox="0 0 200 200" aria-hidden="true">
+                  <path d="M52 86c0-10 8-18 18-18h60c10 0 18 8 18 18v60c0 10-8 18-18 18H70c-10 0-18-8-18-18z" />
+                  <path d="M74 68c0-18 12-30 26-30s26 12 26 30" />
+                  <path d="M62 98h76" />
+                  <path d="M82 116h36" />
+                </svg>`;
+
+        const escapeHtml = (s) =>
+          String(s || "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+
+        const formatPrice = (p) => {
+          const price = Number(p?.price);
+          if (!Number.isFinite(price)) return "$";
+          const discount = Number(p?.discount || 0);
+          if (Number.isFinite(discount) && discount > 0) {
+            const final = price * (1 - discount / 100);
+            return `$${final.toFixed(2)} (-${discount}%)`;
+          }
+          return `$${price.toFixed(2)}`;
+        };
+
+        const renderCard = (p) => {
+          const img = Array.isArray(p?.images) && p.images[0] ? p.images[0] : "";
+          return `<article class="product-card" data-dynamic-product="1" data-product-id="${escapeHtml(p?._id)}">
+              <div class="product-media" aria-label="${escapeHtml(p?.name)}" data-img="${escapeHtml(img)}">
+                <button class="wishlist" type="button" aria-label="Añadir a favoritos">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 21s-7-4.6-9.6-9.2C.7 8.7 2.4 5.6 5.8 5.1c1.8-.3 3.5.5 4.5 1.7 1-1.2 2.7-2 4.5-1.7 3.4.5 5.1 3.6 3.4 6.7C19 16.4 12 21 12 21z"></path>
+                  </svg>
+                </button>
+                ${svgMarkup}
+              </div>
+              <div class="product-meta">
+                <h3 class="product-name">${escapeHtml(p?.name)}</h3>
+                <p class="product-price">${escapeHtml(formatPrice(p))}</p>
+              </div>
+            </article>`;
+        };
+
+        const loadDynamic = async () => {
+          if (!grid) {
+            hydrateMedia();
+            return;
+          }
+
+          try {
+            const res = await fetch(`/api/products?category=${encodeURIComponent("Louis Vuitton")}`);
+            const data = await res.json().catch(() => ({}));
+            const products = Array.isArray(data.products) ? data.products : [];
+
+            grid.querySelectorAll("[data-dynamic-product=\"1\"]").forEach((n) => n.remove());
+            const html = products.map(renderCard).join("");
+            if (html) grid.insertAdjacentHTML("afterbegin", html);
+            hydrateMedia(grid);
+          } catch {
+            hydrateMedia();
+          }
+        };
+
+        document.addEventListener(
+          "click",
+          (e) => {
+            if (e.target.closest("button")) return;
+            const card = e.target.closest(".product-card[data-product-id]");
+            if (!card) return;
+            const id = card.getAttribute("data-product-id");
+            if (!id) return;
+            window.location.href = `/producto/${encodeURIComponent(id)}`;
+          },
+          { passive: true }
+        );
+
+        loadDynamic();
+      })();
+    </script>
+    <%- include('partials/footer') %>
+
+
+  </body>
+</html>
+

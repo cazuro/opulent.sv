@@ -1,0 +1,800 @@
+
+
+  <style>
+      :root {
+        --bg: #0b0f14;
+        --text: #ffffff;
+        --text-muted: rgba(255, 255, 255, 0.8);
+        --hairline: rgba(255, 255, 255, 0.18);
+        --serif: "Didot", "Bodoni MT", "Bodoni 72", "Libre Baskerville", Baskerville, "Times New Roman",
+          Times, serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button {
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        border: 0;
+        padding: 0;
+      }
+
+      .site-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 28px;
+        border-bottom: 1px solid transparent;
+        transition: background-color 180ms ease, box-shadow 180ms ease, border-color 180ms ease,
+          color 180ms ease;
+      }
+
+      .site-header.is-scrolled {
+        background-color: rgba(255, 255, 255, 0.96);
+        border-color: rgba(11, 15, 20, 0.08);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+        color: rgba(11, 15, 20, 0.96);
+      }
+
+      .header-side {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 220px;
+      }
+
+      .header-right {
+        justify-content: flex-end;
+      }
+
+      .header-link {
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        text-transform: none;
+        transition: color 120ms ease;
+        white-space: nowrap;
+      }
+
+      .header-link:hover {
+        color: var(--text);
+      }
+
+      .site-header.is-scrolled .header-link {
+        color: rgba(11, 15, 20, 0.72);
+      }
+
+      .site-header.is-scrolled .header-link:hover {
+        color: rgba(11, 15, 20, 0.96);
+      }
+
+      .brand {
+        letter-spacing: 0.35em;
+        font-weight: 600;
+        font-size: 20px;
+        line-height: 1;
+        padding: 10px 12px;
+        border-radius: 999px;
+        backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        text-align: center;
+      }
+
+      .site-header.is-scrolled .brand {
+        background: rgba(255, 255, 255, 0.6);
+        border-color: rgba(11, 15, 20, 0.12);
+      }
+
+      .icon-button {
+        width: 36px;
+        height: 36px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(0, 0, 0, 0.12);
+        backdrop-filter: blur(8px);
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      }
+
+      .icon-button:hover {
+        transform: translateY(-1px);
+        background: rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+
+      .site-header.is-scrolled .icon-button {
+        background: rgba(255, 255, 255, 0.62);
+        border-color: rgba(11, 15, 20, 0.12);
+      }
+
+      .site-header.is-scrolled .icon-button:hover {
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(11, 15, 20, 0.18);
+      }
+
+      .icon {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.92);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .site-header.is-scrolled .icon {
+        stroke: rgba(11, 15, 20, 0.92);
+      }
+
+      .icon-flag {
+        width: 22px;
+        height: 16px;
+        border-radius: 2px;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+        display: block;
+      }
+
+      .flag-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        margin: 0;
+        width: auto;
+        height: auto;
+        border: none;
+        background: transparent;
+        border-radius: 0;
+        cursor: pointer;
+      }
+
+      .menu-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.38);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+        z-index: 25;
+      }
+
+      .menu-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: min(86vw, 340px);
+        background: rgba(255, 255, 255, 0.96);
+        color: rgba(11, 15, 20, 0.96);
+        border-right: 1px solid rgba(11, 15, 20, 0.08);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+        transform: translateX(-102%);
+        transition: transform 220ms ease, background-color 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        z-index: 30;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .menu-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 18px;
+        border-bottom: 1px solid rgba(11, 15, 20, 0.08);
+      }
+
+      .menu-title {
+        font-size: 14px;
+        letter-spacing: 0.26em;
+        color: rgba(11, 15, 20, 0.72);
+        text-transform: uppercase;
+        margin: 0;
+      }
+
+      .menu-close {
+        width: 36px;
+        height: 36px;
+        display: inline-grid;
+        place-items: center;
+        border: 1px solid rgba(11, 15, 20, 0.12);
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 999px;
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      }
+
+      .menu-close:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(11, 15, 20, 0.18);
+      }
+
+      .menu-list {
+        list-style: none;
+        margin: 0;
+        padding: 8px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .menu-link {
+        display: block;
+        padding: 10px 14px;
+        border-radius: 10px;
+        color: rgba(11, 15, 20, 0.92);
+        transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+      }
+
+      .menu-link:hover {
+        background: rgba(11, 15, 20, 0.06);
+        transform: translateX(2px);
+      }
+
+      body.menu-open {
+        overflow: hidden;
+      }
+
+      body.menu-open .menu-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      body.menu-open .menu-panel {
+        transform: translateX(0);
+      }
+
+      .hero-content {
+        max-width: 900px;
+        padding: 120px 22px 46px;
+        display: grid;
+        gap: 14px;
+        place-items: center;
+        transform: translateY(-52px);
+      }
+
+      .hero-kicker {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.75);
+      }
+
+      .hero-title {
+        margin: 0;
+        font-family: var(--serif);
+        font-size: clamp(54px, 10vw, 122px);
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .new-arrivals {
+        background: #ffffff;
+        color: rgba(11, 15, 20, 0.96);
+        padding: 72px 28px 96px;
+      }
+
+      .new-arrivals-inner {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+
+      .new-arrivals-header {
+        text-align: center;
+        margin: 0 0 34px;
+      }
+
+      .new-arrivals-kicker {
+        margin: 0 0 6px;
+        font-size: 11px;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: rgba(11, 15, 20, 0.62);
+      }
+
+      .new-arrivals-title {
+        margin: 0;
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: clamp(30px, 4.2vw, 44px);
+        letter-spacing: 0.01em;
+      }
+
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 26px;
+      }
+
+      .product-card {
+        display: grid;
+        gap: 12px;
+      }
+
+      .section-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 28px;
+      }
+
+      .more-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 22px;
+        border-radius: 999px;
+        border: 1px solid rgba(11, 15, 20, 0.14);
+        background: rgba(255, 255, 255, 0.92);
+        color: rgba(11, 15, 20, 0.92);
+        font-family: var(--serif);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      }
+
+      .more-button:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 1);
+        border-color: rgba(11, 15, 20, 0.22);
+      }
+
+      .product-media {
+        position: relative;
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1 / 1;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.02));
+        border: 1px solid rgba(11, 15, 20, 0.08);
+        overflow: hidden;
+      }
+
+      .wishlist {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 36px;
+        height: 36px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 999px;
+        border: 1px solid rgba(11, 15, 20, 0.12);
+        background: rgba(255, 255, 255, 0.85);
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+        z-index: 2;
+      }
+
+      .wishlist:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.98);
+        border-color: rgba(11, 15, 20, 0.18);
+      }
+
+      .wishlist svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: rgba(11, 15, 20, 0.82);
+        stroke-width: 1.8;
+      }
+
+      .product-svg {
+        width: 70%;
+        height: 70%;
+        opacity: 0.55;
+      }
+
+      .pm-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        z-index: 1;
+      }
+
+      .product-media.has-img .product-svg {
+        display: none;
+      }
+
+      .product-svg * {
+        fill: none;
+        stroke: rgba(11, 15, 20, 0.55);
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .product-meta {
+        display: grid;
+        gap: 4px;
+      }
+
+      .product-name {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(11, 15, 20, 0.92);
+      }
+
+      .product-price {
+        margin: 0;
+        font-size: 12px;
+        color: rgba(11, 15, 20, 0.52);
+      }
+
+      .hero-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        border: 1px solid var(--hairline);
+        color: rgba(255, 255, 255, 0.92);
+        background: rgba(0, 0, 0, 0.18);
+        backdrop-filter: blur(10px);
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      }
+
+      .hero-cta:hover {
+        transform: translateY(-1px);
+        background: rgba(0, 0, 0, 0.26);
+        border-color: rgba(255, 255, 255, 0.26);
+      }
+
+      .hero-cta .icon {
+        width: 16px;
+        height: 16px;
+      }
+
+      @media (max-width: 720px) {
+        .site-header {
+          padding: 14px 14px;
+          justify-content: center;
+          flex-wrap: wrap;
+          row-gap: 10px;
+        }
+
+        .header-side {
+          min-width: 0;
+          gap: 10px;
+          flex: 0 0 100%;
+          justify-content: center;
+        }
+
+        .header-left {
+          order: 2;
+        }
+
+        .header-right {
+          order: 3;
+        }
+
+        .header-nav {
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .header-link {
+          display: inline-flex;
+          font-size: 12px;
+          letter-spacing: 0.02em;
+        }
+
+        .brand {
+          order: 1;
+          width: 100%;
+          text-align: center;
+          font-size: 16px;
+          letter-spacing: 0.28em;
+        }
+
+        .hero-content {
+          transform: translateY(-30px);
+        }
+
+        .hero-title {
+          letter-spacing: 0.04em;
+        }
+
+        .new-arrivals {
+          padding: 56px 14px 72px;
+        }
+
+        .product-grid {
+          grid-template-columns: 1fr;
+          gap: 22px;
+        }
+      }
+
+      @media (max-width: 1080px) {
+        .product-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      .section-banner {
+        width: 100%;
+        aspect-ratio: 16 / 6;
+        object-fit: cover;
+        display: block;
+        border: 1px solid rgba(11, 15, 20, 0.08);
+        border-radius: 6px;
+        margin: 0 0 22px;
+      }
+
+      .site-footer {
+        background: #ffffff;
+        color: rgba(11, 15, 20, 0.92);
+        border-top: 1px solid rgba(11, 15, 20, 0.08);
+        padding: 56px 28px 28px;
+      }
+
+      .footer-inner {
+        max-width: 1180px;
+        margin: 0 auto;
+        display: grid;
+        gap: 28px;
+      }
+
+      .footer-top {
+        display: grid;
+        grid-template-columns: 1.2fr repeat(3, 1fr);
+        gap: 26px;
+        align-items: start;
+      }
+
+      .footer-logo {
+        margin: 0 0 10px;
+        font-family: var(--serif);
+        font-size: clamp(24px, 4vw, 36px);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+      }
+
+      .footer-title {
+        margin: 0 0 10px;
+        font-size: 13px;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: rgba(11, 15, 20, 0.62);
+      }
+
+      .footer-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+      }
+
+      .footer-link {
+        color: rgba(11, 15, 20, 0.92);
+        transition: color 120ms ease, transform 120ms ease;
+      }
+
+      .footer-link:hover {
+        color: rgba(11, 15, 20, 1);
+        transform: translateX(2px);
+      }
+
+      .footer-brands {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 18px;
+        color: rgba(11, 15, 20, 0.8);
+        font-size: 13px;
+      }
+
+      .footer-contact {
+        display: grid;
+        gap: 10px;
+      }
+
+      .footer-contact-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(11, 15, 20, 0.92);
+      }
+
+      .icon-dark {
+        width: 18px;
+        height: 18px;
+        stroke: rgba(11, 15, 20, 0.96);
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .social {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 6px;
+      }
+
+      .footer-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(11, 15, 20, 0.08);
+        font-size: 12px;
+        color: rgba(11, 15, 20, 0.62);
+      }
+
+      .payments {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .payment-icon {
+        width: 28px;
+        height: 18px;
+        stroke: rgba(11, 15, 20, 0.96);
+        fill: none;
+        stroke-width: 1.6;
+        border-radius: 2px;
+      }
+
+      @media (max-width: 900px) {
+        .footer-top {
+          grid-template-columns: 1fr;
+        }
+
+        .footer-bottom {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+      }
+    </style>
+     <footer class="site-footer" aria-label="Pie de página">
+      <div class="footer-inner">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <h2 class="footer-logo">OPULENT</h2>
+            <div class="footer-contact">
+              <div class="footer-contact-row">
+                <svg class="icon-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.86.34 1.7.66 2.5a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.58-1.18a2 2 0 0 1 2.11-.45c.8.32 1.64.54 2.5.66A2 2 0 0 1 22 16.92z"/></svg>
+                <a class="footer-link" href="tel:+0000000000">+00 0000 0000</a>
+              </div>
+              <div class="footer-contact-row">
+                <svg class="icon-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+                <a class="footer-link" href="mailto:hola@opulent.com">opulent.sv@gmail.com</a>
+              </div>
+              <div class="social">
+                <a class="footer-link" href="#" aria-label="Instagram">
+                  <svg class="icon-dark" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg>
+                </a>
+                <a class="footer-link" href="#" aria-label="Facebook">
+                  <svg class="icon-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                </a>
+                <a class="footer-link" href="#" aria-label="X">
+                  <svg class="icon-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l8 8M20 4L4 20M12 12l8 8"/></svg>
+                </a>
+                <a class="footer-link" href="#" aria-label="YouTube">
+                  <svg class="icon-dark" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M10 9l5 3-5 3V9z"/></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <nav class="footer-col" aria-label="Categorías">
+            <p class="footer-title">Categorías</p>
+            <ul class="footer-list">
+              <li><a class="footer-link" href="#">Perfumes</a></li>
+              <li><a class="footer-link" href="#">Carteras</a></li>
+              <li><a class="footer-link" href="#">Bolsos</a></li>
+              <li><a class="footer-link" href="#">Collares</a></li>
+              <li><a class="footer-link" href="#">Zapatos</a></li>
+            </ul>
+          </nav>
+
+          <nav class="footer-col" aria-label="Atención al cliente">
+            <p class="footer-title">Atención</p>
+            <ul class="footer-list">
+              <li><a class="footer-link" href="#">Contacto</a></li>
+              <li><a class="footer-link" href="#">Envíos</a></li>
+              <li><a class="footer-link" href="#">Devoluciones</a></li>
+              <li><a class="footer-link" href="#">Preguntas frecuentes</a></li>
+            </ul>
+          </nav>
+
+          <div class="footer-col" aria-label="Marcas">
+            <p class="footer-title">Marcas</p>
+            <div class="footer-brands">
+              <span>Louis Vuitton</span>
+              <span>Dior</span>
+              <span>Prada</span>
+              <span>Gucci</span>
+              <span>Chanel</span>
+              <span>Hermès</span>
+              <span>Burberry</span>
+              <span>Versace</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2026 Opulent. Todos los derechos reservados.</p>
+          <div class="payments" aria-label="Pagos">
+            <svg class="payment-icon" viewBox="0 0 28 18" aria-hidden="true"><rect x="1" y="1" width="26" height="16" rx="2"/></svg>
+            <svg class="payment-icon" viewBox="0 0 28 18" aria-hidden="true"><rect x="1" y="1" width="26" height="16" rx="2"/><path d="M7 9h14"/></svg>
+            <svg class="payment-icon" viewBox="0 0 28 18" aria-hidden="true"><rect x="1" y="1" width="26" height="16" rx="2"/><circle cx="11" cy="9" r="3"/><circle cx="17" cy="9" r="3"/></svg>
+          </div>
+        </div>
+      </div>
+    </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBSamzfdWT6AxAuEavIhrXbgk2vLWZtWrc",
+      authDomain: "mondongo-f7ee2.firebaseapp.com",
+      projectId: "mondongo-f7ee2",
+      storageBucket: "mondongo-f7ee2.firebasestorage.app",
+      messagingSenderId: "816174077002",
+      appId: "1:816174077002:web:e8de99449c1eabf4a5c2b3",
+      measurementId: "G-CSYFEWV0JY",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    window.firebaseApp = app;
+    window.firebaseAuth = auth;
+    window.firebaseDb = db;
+    window.firebaseStorage = storage;
+
+    isSupported()
+      .then((ok) => {
+        if (ok) getAnalytics(app);
+      })
+      .catch(() => {});
+  </script>

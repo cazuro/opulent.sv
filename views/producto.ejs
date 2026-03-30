@@ -1,0 +1,1010 @@
+<%- include('partials/header') %>
+
+<section class="product-detail" aria-label="Detalle del producto">
+  <div class="product-detail-inner">
+    <% if (!product) { %>
+      <div class="product-detail-missing">
+        <h1 class="product-detail-missing-title">Producto no encontrado</h1>
+        <a class="product-detail-missing-link" href="/">Volver</a>
+      </div>
+    <% } else { %>
+      <%
+        const createdAtMs = product && product.createdAt ? new Date(product.createdAt).getTime() : 0;
+        const isNew = Number.isFinite(createdAtMs) && createdAtMs > 0 && Date.now() - createdAtMs < 48 * 60 * 60 * 1000;
+      %>
+      <div class="product-detail-card">
+        <div class="pd-layout" aria-label="Detalle del producto">
+          <div class="pd-media" aria-label="Galería del producto">
+            <div class="pd-media-frame">
+              <button class="pd-arrow pd-prev" type="button" id="pdPrev" aria-label="Anterior">‹</button>
+              <img class="pd-image" id="pdImage" alt="<%= product.name %>" draggable="false" />
+              <button class="pd-arrow pd-next" type="button" id="pdNext" aria-label="Siguiente">›</button>
+              <div class="pd-counter" id="pdCounter" aria-label="Contador"></div>
+            </div>
+          </div>
+
+          <div class="pd-panel" aria-label="Información del producto">
+            <div class="pd-panel-top">
+              <div class="pd-title-row">
+                <h1 class="pd-title"><%= product.name %></h1>
+                <% if (isNew) { %><span class="pd-badge">Nuevo</span><% } %>
+              </div>
+              <p class="pd-price" id="pdPrice"></p>
+            </div>
+
+            <div class="pd-tabs" role="tablist" aria-label="Secciones del producto">
+              <button class="pd-tab is-active" type="button" role="tab" aria-selected="true" data-pd-tab="desc">
+                DESCRIPTION
+              </button>
+              <button class="pd-tab" type="button" role="tab" aria-selected="false" data-pd-tab="details">
+                DETAILS
+              </button>
+            </div>
+
+            <div class="pd-tab-content" id="pdTabContent" aria-live="polite"></div>
+
+            <div id="pdOptions" aria-label="Opciones"></div>
+            <p class="pd-select-error" id="pdSelectError" role="alert" hidden></p>
+
+            <div class="pd-actions" aria-label="Acciones">
+              <button class="pd-action pd-wish" type="button" aria-label="Pedir y pagar al recibir por WhatsApp">
+                <svg class="pd-wa" viewBox="0 0 32 32" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M19.11 17.49c-.27-.13-1.6-.79-1.85-.88-.25-.09-.43-.13-.61.13-.18.27-.7.88-.86 1.06-.16.18-.32.2-.59.07-.27-.13-1.15-.42-2.19-1.35-.81-.72-1.36-1.61-1.52-1.88-.16-.27-.02-.41.12-.54.12-.12.27-.32.41-.48.13-.16.18-.27.27-.45.09-.18.04-.34-.02-.48-.07-.13-.61-1.48-.84-2.03-.22-.53-.45-.46-.61-.46h-.52c-.18 0-.48.07-.73.34-.25.27-.95.93-.95 2.27s.97 2.64 1.11 2.82c.13.18 1.9 2.9 4.6 4.06.64.28 1.14.45 1.53.58.64.2 1.22.17 1.68.1.51-.08 1.6-.65 1.82-1.28.22-.63.22-1.17.15-1.28-.07-.11-.25-.18-.52-.32zM16 6.52c-5.23 0-9.48 4.18-9.48 9.32 0 1.64.45 3.17 1.23 4.5L6.5 25.5l5.33-1.71c1.29.7 2.77 1.1 4.36 1.1 5.23 0 9.48-4.18 9.48-9.32S21.23 6.52 16 6.52zm0 16.74c-1.5 0-2.9-.41-4.1-1.12l-.29-.17-3.16 1.01 1.03-3.02-.19-.3c-.76-1.2-1.2-2.63-1.2-4.19 0-4.34 3.59-7.87 7.99-7.87s7.99 3.53 7.99 7.87-3.59 7.79-7.99 7.79z"
+                  />
+                </svg>
+                <span class="pd-wish-text">Pedir y pagar al recibir</span>
+              </button>
+            </div>
+
+            <div class="pd-order-modal" id="pdOrderModal" hidden>
+              <div class="pd-order-backdrop" data-pd-order-close></div>
+              <div class="pd-order-card" role="dialog" aria-modal="true" aria-label="Datos de entrega">
+                <div class="pd-order-head">
+                  <p class="pd-order-title">Enviar encargo</p>
+                  <button class="pd-order-close" type="button" aria-label="Cerrar" data-pd-order-close>×</button>
+                </div>
+                <form class="pd-order-form" id="pdOrderForm">
+                  <label class="pd-order-field">
+                    <span class="pd-order-label">Departamento</span>
+                    <select class="pd-order-input" name="departamento" required>
+                      <option value="" selected disabled>Selecciona un departamento</option>
+                      <option value="Ahuachapán">Ahuachapán</option>
+                      <option value="Santa Ana">Santa Ana</option>
+                      <option value="Sonsonate">Sonsonate</option>
+                      <option value="Chalatenango">Chalatenango</option>
+                      <option value="La Libertad">La Libertad</option>
+                      <option value="San Salvador">San Salvador</option>
+                      <option value="Cuscatlán">Cuscatlán</option>
+                      <option value="La Paz">La Paz</option>
+                      <option value="Cabañas">Cabañas</option>
+                      <option value="San Vicente">San Vicente</option>
+                      <option value="Usulután">Usulután</option>
+                      <option value="San Miguel">San Miguel</option>
+                      <option value="Morazán">Morazán</option>
+                      <option value="La Unión">La Unión</option>
+                    </select>
+                  </label>
+                  <label class="pd-order-field">
+                    <span class="pd-order-label">Zona de entrega</span>
+                    <input class="pd-order-input" name="zona" type="text" required placeholder="Ej: Plaza Mundo Soyapango" />
+                    <span class="pd-order-help">Solo se podrá hacer el envío en Plazas Mundo, Gasolineras y Plazas.</span>
+                  </label>
+                  <label class="pd-order-field">
+                    <span class="pd-order-label">Hora de entrega</span>
+                    <input class="pd-order-input" name="hora" type="time" required />
+                  </label>
+                  <div class="pd-order-actions" aria-label="Acciones del pedido">
+                    <button class="pd-action pd-add" type="submit">Enviar encargo</button>
+                    <button class="pd-action pd-wish" type="button" data-pd-order-close>Cancelar pedido</button>
+                  </div>
+                  <p class="pd-order-error" id="pdOrderError" role="alert" hidden></p>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<style>
+  :root {
+    --opulent-header-h: 76px;
+  }
+
+  .site-header {
+    background-color: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid rgba(11, 15, 20, 0.08);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+  }
+
+  .site-header .header-link {
+    color: rgba(11, 15, 20, 0.72);
+  }
+
+  .site-header .header-link:hover {
+    color: rgba(11, 15, 20, 0.96);
+  }
+
+  .site-header .brand {
+    background: rgba(255, 255, 255, 0.6);
+    border-color: rgba(11, 15, 20, 0.12);
+    color: rgba(11, 15, 20, 0.96);
+  }
+
+  .product-detail {
+    background: #ffffff;
+    color: rgba(11, 15, 20, 0.96);
+    padding: var(--opulent-header-h) 0 0;
+  }
+
+  .product-detail-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 22px 62px;
+  }
+
+  .product-detail-card {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 0;
+    border: 0;
+    box-shadow: none;
+    overflow: hidden;
+  }
+
+  .pd-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 0;
+    height: calc(100svh - var(--opulent-header-h) - 28px);
+    border: 1px solid rgba(11, 15, 20, 0.08);
+  }
+
+  .pd-media {
+    background: rgba(11, 15, 20, 0.02);
+    border-right: 1px solid rgba(11, 15, 20, 0.08);
+    height: 100%;
+    padding: 24px;
+  }
+
+  .pd-media-frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding-bottom: 10px;
+    background: #ffffff;
+    border: 1px solid rgba(11, 15, 20, 0.08);
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+  }
+
+  .pd-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: none;
+    display: block;
+    padding: 0;
+    user-select: none;
+    -webkit-user-drag: none;
+    z-index: 0;
+  }
+
+  .pd-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translate3d(0, -50%, 0);
+    z-index: 1;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    border: 1px solid rgba(11, 15, 20, 0.14);
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+    color: rgba(11, 15, 20, 0.86);
+    cursor: pointer;
+    font-size: 30px;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    transition: transform 140ms ease, background 140ms ease, border-color 140ms ease, box-shadow 140ms ease,
+      opacity 140ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pd-arrow:hover {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(11, 15, 20, 0.22);
+    transform: translate3d(0, -50%, 0) scale(1.04);
+  }
+
+  .pd-arrow:active {
+    transform: translate3d(0, -50%, 0) scale(0.98);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+  }
+
+  .pd-arrow:focus-visible {
+    outline: 2px solid rgba(11, 15, 20, 0.6);
+    outline-offset: 2px;
+  }
+
+  .pd-arrow:disabled {
+    opacity: 0.45;
+    cursor: default;
+    box-shadow: none;
+    transform: translate3d(0, -50%, 0);
+  }
+
+  .pd-prev {
+    left: 14px;
+  }
+
+  .pd-next {
+    right: 14px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pd-arrow {
+      transition: none;
+    }
+  }
+
+  .pd-counter {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(11, 15, 20, 0.12);
+    background: rgba(255, 255, 255, 0.92);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(11, 15, 20, 0.72);
+  }
+
+  .pd-panel {
+    padding: 34px 34px 28px;
+    display: grid;
+    align-content: start;
+    gap: 22px;
+    background: #ffffff;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .pd-panel-top {
+    display: grid;
+    gap: 10px;
+  }
+
+  .pd-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  .pd-badge {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(11, 15, 20, 0.66);
+    border: 1px solid rgba(11, 15, 20, 0.18);
+    padding: 6px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .pd-title {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(20px, 2.6vw, 32px);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .pd-price {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+    color: rgba(11, 15, 20, 0.88);
+    letter-spacing: 0.08em;
+  }
+
+  .pd-price-old {
+    font-size: 13px;
+    color: rgba(11, 15, 20, 0.5);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+
+  .pd-price-new {
+    font-size: 20px;
+    font-weight: 600;
+    color: rgba(11, 15, 20, 0.96);
+    letter-spacing: 0.06em;
+  }
+
+  .pd-price-off {
+    font-size: 12px;
+    color: rgba(11, 15, 20, 0.72);
+    border: 1px solid rgba(11, 15, 20, 0.14);
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(11, 15, 20, 0.03);
+  }
+
+  .pd-tabs {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border-bottom: 1px solid rgba(11, 15, 20, 0.12);
+    padding-bottom: 12px;
+  }
+
+  .pd-tab {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(11, 15, 20, 0.48);
+    cursor: pointer;
+    padding: 10px 0;
+    border-bottom: 2px solid transparent;
+  }
+
+  .pd-tab.is-active {
+    color: rgba(11, 15, 20, 0.92);
+    border-bottom-color: rgba(11, 15, 20, 0.92);
+  }
+
+  .pd-tab-content {
+    color: rgba(11, 15, 20, 0.62);
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 62ch;
+    margin-top: -6px;
+  }
+
+  .pd-option {
+    display: grid;
+    gap: 12px;
+  }
+
+  .pd-option-title {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(11, 15, 20, 0.7);
+  }
+
+  .pd-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+    gap: 10px;
+    max-width: 520px;
+  }
+
+  .pd-sizes {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+    max-width: 420px;
+  }
+
+  .pd-choice,
+  .pd-size {
+    height: 40px;
+    border: 1px solid rgba(11, 15, 20, 0.14);
+    background: rgba(255, 255, 255, 0.92);
+    color: rgba(11, 15, 20, 0.86);
+    letter-spacing: 0.06em;
+    cursor: pointer;
+  }
+
+  .pd-choice.is-selected,
+  .pd-size.is-selected {
+    border-color: rgba(11, 15, 20, 0.86);
+  }
+
+  .pd-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    
+    max-width: 520px;
+  }
+
+  .pd-select-error {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(210, 34, 34, 0.28);
+    background: rgba(210, 34, 34, 0.06);
+    color: rgba(210, 34, 34, 0.96);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .pd-action {
+    height: 48px;
+    border: 1px solid rgba(11, 15, 20, 0.16);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .pd-add {
+    background: rgba(11, 15, 20, 0.96);
+    color: #ffffff;
+    border-color: rgba(11, 15, 20, 0.96);
+  }
+
+  .pd-wish {
+    background: rgba(255, 255, 255, 0.92);
+    color: rgba(11, 15, 20, 0.92);
+  }
+
+  .pd-wa {
+    width: 18px;
+    height: 18px;
+    color: #25d366;
+    display: inline-block;
+    vertical-align: -3px;
+    margin-right: 10px;
+  }
+
+  .pd-order-modal {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 22px;
+    z-index: 9999;
+  }
+
+  .pd-order-modal[hidden] {
+    display: none;
+  }
+
+  .pd-order-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 15, 20, 0.62);
+  }
+
+  .pd-order-card {
+    position: relative;
+    width: min(520px, 100%);
+    border: 1px solid rgba(11, 15, 20, 0.12);
+    background: #ffffff;
+    color: rgba(11, 15, 20, 0.96);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  }
+
+  .pd-order-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(11, 15, 20, 0.08);
+  }
+
+  .pd-order-title {
+    margin: 0;
+    font-family: var(--serif);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .pd-order-close {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(11, 15, 20, 0.14);
+    cursor: pointer;
+  }
+
+  .pd-order-form {
+    padding: 16px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .pd-order-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .pd-order-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .pd-order-label {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(11, 15, 20, 0.8);
+  }
+
+  .pd-order-input {
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid rgba(11, 15, 20, 0.16);
+    background: rgba(255, 255, 255, 0.98);
+    font: inherit;
+    color: rgba(11, 15, 20, 0.96);
+  }
+
+  .pd-order-help {
+    font-size: 12px;
+    color: rgba(11, 15, 20, 0.68);
+  }
+
+  .pd-order-error {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(210, 34, 34, 0.28);
+    background: rgba(210, 34, 34, 0.06);
+    color: rgba(210, 34, 34, 0.96);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .product-detail-missing {
+    border: 1px solid rgba(11, 15, 20, 0.08);
+    border-radius: 16px;
+    padding: 22px;
+    display: grid;
+    gap: 10px;
+    max-width: 520px;
+  }
+
+  .product-detail-missing-title {
+    margin: 0;
+    font-family: var(--serif);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .product-detail-missing-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(11, 15, 20, 0.14);
+    background: rgba(11, 15, 20, 0.96);
+    color: #ffffff;
+    font-family: var(--serif);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 900px) {
+    .product-detail {
+      padding: var(--opulent-header-h) 0 0;
+    }
+
+    .product-detail-inner {
+      padding: 18px 14px 52px;
+    }
+
+    .pd-layout {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+
+    .pd-media {
+      border-right: 0;
+      border-bottom: 1px solid rgba(11, 15, 20, 0.08);
+      padding: 18px;
+    }
+
+    .pd-media-frame {
+      height: 56svh;
+    }
+
+    .pd-prev {
+      left: 10px;
+    }
+
+    .pd-next {
+      right: 10px;
+    }
+
+    .pd-panel {
+      padding: 22px 18px 22px;
+    }
+
+    .pd-tabs {
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .pd-actions {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  (() => {
+    const setHeaderHeight = () => {
+      const header = document.querySelector(".site-header");
+      if (!header) return;
+      const px = Math.ceil(header.getBoundingClientRect().height);
+      if (px > 0) document.documentElement.style.setProperty("--opulent-header-h", `${px}px`);
+    };
+
+    setHeaderHeight();
+    window.addEventListener("resize", setHeaderHeight);
+
+    const product = <%- JSON.stringify(product || null) %>;
+    if (!product) return;
+
+    const category = String(product.category || "").trim();
+    const isPerfumes = category === "Perfumes";
+    const isCamisas = category === "Camisas";
+    const isCarteras = category === "Carteras";
+
+    const images = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
+    const imageEl = document.getElementById("pdImage");
+    const prev = document.getElementById("pdPrev");
+    const next = document.getElementById("pdNext");
+    const counter = document.getElementById("pdCounter");
+    const priceEl = document.getElementById("pdPrice");
+    if (!priceEl) return;
+
+    const formatMoney = (n) => {
+      const v = Number(n);
+      if (!Number.isFinite(v)) return "$";
+      return `$${v.toFixed(2)}`;
+    };
+
+    const renderPrice = () => {
+      const price = Number(product.price);
+      const discount = Number(product.discount || 0);
+      if (!Number.isFinite(price)) {
+        priceEl.textContent = "$";
+        return;
+      }
+
+      if (!Number.isFinite(discount) || discount <= 0) {
+        priceEl.textContent = formatMoney(price);
+        return;
+      }
+
+      const final = price * (1 - discount / 100);
+      const d = Math.round(discount);
+      priceEl.innerHTML = `<span class="pd-price-old">${formatMoney(price)}</span><span class="pd-price-new">${formatMoney(final)}</span><span class="pd-price-off">-${d}%</span>`;
+    };
+
+    renderPrice();
+
+    const tabContent = document.getElementById("pdTabContent");
+    const tabs = Array.from(document.querySelectorAll(".pd-tab[data-pd-tab]"));
+    const setTab = (key) => {
+      if (!tabContent) return;
+
+      const price = Number(product.price);
+      const discount = Number(product.discount || 0);
+      const final =
+        Number.isFinite(price) && Number.isFinite(discount) && discount > 0 ? price * (1 - discount / 100) : null;
+
+      const texts = {
+        desc: `Categoría: ${String(product.category || "").trim() || "—"}.`,
+        details: `Precio: ${formatMoney(price)}${final == null ? "" : ` | Final: ${formatMoney(final)} | Descuento: ${discount}%`}.`,
+        reviews: "Aún no hay reseñas.",
+        fit: isPerfumes
+          ? "Uso recomendado: aplica en muñecas y cuello. Evita frotar para mantener la fragancia."
+          : isCamisas
+            ? "Corte regular. Si estás entre dos tallas, elige la mayor."
+            : isCarteras
+              ? "Medidas aproximadas y compartimentos pueden variar según el modelo."
+              : "Tallaje estándar. Si estás entre dos tallas, elige la mayor.",
+      };
+
+      tabContent.textContent = texts[key] || texts.desc;
+
+      tabs.forEach((t) => {
+        const active = t.getAttribute("data-pd-tab") === key;
+        t.classList.toggle("is-active", active);
+        t.setAttribute("aria-selected", active ? "true" : "false");
+      });
+    };
+
+    if (tabContent && tabs.length) {
+      tabs.forEach((t) =>
+        t.addEventListener("click", () => {
+          const key = t.getAttribute("data-pd-tab") || "desc";
+          setTab(key);
+        })
+      );
+      setTab("desc");
+    }
+
+    const optionsRoot = document.getElementById("pdOptions");
+    const buildChoices = (title, group, values) => {
+      const buttons = values
+        .map(
+          (v, i) =>
+            `<button class="pd-choice" type="button" role="listitem" data-pd-group="${group}">${v}</button>`
+        )
+        .join("");
+      return `
+        <div class="pd-option">
+          <p class="pd-option-title">${title}</p>
+          <div class="pd-choices" role="list">${buttons}</div>
+        </div>
+      `;
+    };
+
+    const getAvailableSizesFromStock = () => {
+      const rows = Array.isArray(product?.stockBySize) ? product.stockBySize : [];
+      const seen = new Set();
+      return rows
+        .filter((r) => Number(r?.qty) > 0)
+        .map((r) => String(r?.size || "").trim())
+        .filter((s) => {
+          if (!s) return false;
+          const k = s.toUpperCase();
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+    };
+
+    const renderOptions = () => {
+      if (!optionsRoot) return;
+
+      if (isPerfumes) {
+        optionsRoot.innerHTML = [
+          buildChoices("CONTENIDO", "contenido", ["50ml", "75ml", "100ml", "150ml"]),
+          buildChoices("CONCENTRACIÓN", "concentracion", ["EDT", "EDP", "PARFUM"]),
+        ].join("");
+        return;
+      }
+
+      if (isCamisas) {
+        const talla = getAvailableSizesFromStock();
+        optionsRoot.innerHTML = [buildChoices("TALLA", "talla", talla.length ? talla : ["XS", "S", "M", "L", "XL"])].join(
+          ""
+        );
+        return;
+      }
+
+      if (isCarteras) {
+        optionsRoot.innerHTML = [
+          buildChoices("TAMAÑO", "tamano", ["PEQUEÑA", "MEDIANA", "GRANDE"]),
+          buildChoices("MATERIAL", "material", ["CUERO", "LONA", "SINTÉTICO"]),
+        ].join("");
+        return;
+      }
+
+      const sizes = getAvailableSizesFromStock();
+      optionsRoot.innerHTML = [buildChoices("Talla", "size", sizes.length ? sizes : ["7", "8", "9", "10", "11", "12"])].join(
+        ""
+      );
+    };
+
+    renderOptions();
+
+    if (optionsRoot) {
+      optionsRoot.addEventListener("click", (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+
+        if (t.classList.contains("pd-choice")) {
+          const selectError = document.getElementById("pdSelectError");
+          if (selectError) selectError.hidden = true;
+          const group = t.getAttribute("data-pd-group");
+          if (!group) return;
+          const list = Array.from(optionsRoot.querySelectorAll(`.pd-choice[data-pd-group="${group}"]`));
+          list.forEach((x) => x.classList.remove("is-selected"));
+          t.classList.add("is-selected");
+          return;
+        }
+      });
+    }
+
+    const wishButton = document.querySelector(".pd-action.pd-wish");
+    const orderModal = document.getElementById("pdOrderModal");
+    const orderForm = document.getElementById("pdOrderForm");
+    const orderError = document.getElementById("pdOrderError");
+    const selectError = document.getElementById("pdSelectError");
+
+    const setOrderError = (msg) => {
+      if (!orderError) return;
+      orderError.textContent = String(msg || "");
+      orderError.hidden = !orderError.textContent;
+    };
+
+    const setSelectError = (msg) => {
+      if (!selectError) return;
+      selectError.textContent = String(msg || "");
+      selectError.hidden = !selectError.textContent;
+    };
+
+    const cssEscape = (value) => {
+      const v = String(value ?? "");
+      if (window.CSS && typeof window.CSS.escape === "function") return window.CSS.escape(v);
+      return v.replace(/["\\]/g, "\\$&");
+    };
+
+    const getSelectedOptions = () => {
+      if (!optionsRoot) return [];
+      const selected = Array.from(optionsRoot.querySelectorAll(".pd-choice.is-selected[data-pd-group]"));
+      return selected
+        .map((el) => {
+          const group = el.getAttribute("data-pd-group") || "";
+          const value = (el.textContent || "").trim();
+          const optionWrap = el.closest(".pd-option");
+          const titleEl = optionWrap ? optionWrap.querySelector(".pd-option-title") : null;
+          const title = titleEl ? (titleEl.textContent || "").trim() : group;
+          return { group, value, title };
+        })
+        .filter((x) => x.group && x.value);
+    };
+
+    const getMissingOptionTitles = () => {
+      if (!optionsRoot) return [];
+      const groupEls = Array.from(optionsRoot.querySelectorAll(".pd-choice[data-pd-group]"));
+      const groups = Array.from(new Set(groupEls.map((el) => el.getAttribute("data-pd-group")).filter(Boolean)));
+      const missing = [];
+      groups.forEach((g) => {
+        const selected = optionsRoot.querySelector(`.pd-choice.is-selected[data-pd-group="${cssEscape(g)}"]`);
+        if (selected) return;
+        const any = optionsRoot.querySelector(`.pd-choice[data-pd-group="${cssEscape(g)}"]`);
+        const optionWrap = any ? any.closest(".pd-option") : null;
+        const titleEl = optionWrap ? optionWrap.querySelector(".pd-option-title") : null;
+        const title = titleEl ? (titleEl.textContent || "").trim() : g;
+        if (title) missing.push(title);
+      });
+      return missing;
+    };
+
+    const openOrderModal = () => {
+      if (!orderModal) return;
+      setOrderError("");
+      orderModal.hidden = false;
+      document.body.style.overflow = "hidden";
+      const first = orderModal.querySelector("select, input, button");
+      if (first instanceof HTMLElement) first.focus();
+    };
+
+    const closeOrderModal = () => {
+      if (!orderModal) return;
+      orderModal.hidden = true;
+      document.body.style.overflow = "";
+      if (wishButton instanceof HTMLElement) wishButton.focus();
+    };
+
+    if (orderModal) {
+      orderModal.addEventListener("click", (e) => {
+        const raw = e.target;
+        const t = raw instanceof Element ? raw : null;
+        const closeEl = t ? t.closest("[data-pd-order-close]") : null;
+        if (closeEl) closeOrderModal();
+      });
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && orderModal && !orderModal.hidden) closeOrderModal();
+    });
+
+    if (wishButton) {
+      wishButton.addEventListener("click", () => {
+        const missing = getMissingOptionTitles();
+        if (missing.length) {
+          setSelectError(`Selecciona una opción en: ${missing.join(", ")}.`);
+          const target = optionsRoot || selectError;
+          if (target && typeof target.scrollIntoView === "function") target.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+        setSelectError("");
+        openOrderModal();
+      });
+    }
+
+    if (orderForm) {
+      orderForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        setOrderError("");
+
+        const whatsappPhoneRaw = "";
+        const whatsappPhone = String(whatsappPhoneRaw || "").replace(/\D/g, "");
+
+        const fd = new FormData(orderForm);
+        const departamento = String(fd.get("departamento") || "").trim();
+        const zona = String(fd.get("zona") || "").trim();
+        const hora = String(fd.get("hora") || "").trim();
+
+        if (!departamento || !zona || !hora) {
+          setOrderError("Completa todos los campos.");
+          return;
+        }
+
+        const selectedOptions = getSelectedOptions();
+        const optionsLine = selectedOptions.length
+          ? selectedOptions.map((x) => `${x.title}: ${x.value}`).join(" | ")
+          : "—";
+
+        const lines = [
+          `Hola, quiero pedir: ${String(product.name || "").trim() || "Producto"}`,
+          `Opciones: ${optionsLine}`,
+          `Departamento: ${departamento}`,
+          `Zona de entrega: ${zona}`,
+          `Hora de entrega: ${hora}`,
+          "Pago al recibir.",
+          `Link: ${window.location.href}`,
+        ];
+
+        const text = encodeURIComponent(lines.join("\n"));
+        const url = whatsappPhone ? `https://wa.me/${whatsappPhone}?text=${text}` : `https://wa.me/?text=${text}`;
+        window.open(url, "_blank", "noopener,noreferrer");
+        closeOrderModal();
+      });
+    }
+
+    if (imageEl && prev && next && counter) {
+      const pad2 = (n) => String(n).padStart(2, "0");
+      let index = 0;
+
+      const render = () => {
+        if (!images.length) {
+          imageEl.src = "";
+          counter.textContent = "";
+          prev.disabled = true;
+          next.disabled = true;
+          return;
+        }
+
+        imageEl.src = images[index] || images[0];
+        counter.textContent = `${pad2(index + 1)} / ${pad2(images.length)}`;
+        prev.disabled = images.length <= 1;
+        next.disabled = images.length <= 1;
+      };
+
+      const go = (delta) => {
+        if (!images.length) return;
+        index = (index + delta + images.length) % images.length;
+        render();
+      };
+
+      prev.addEventListener("click", () => go(-1));
+      next.addEventListener("click", () => go(1));
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") go(-1);
+        if (e.key === "ArrowRight") go(1);
+      });
+
+      render();
+    }
+  })();
+</script>
+
+<%- include('partials/footer') %>
