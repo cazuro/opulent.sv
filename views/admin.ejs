@@ -374,9 +374,39 @@
         if (!(check instanceof HTMLInputElement) || !(qtyInput instanceof HTMLInputElement)) return;
         if (!check.checked) return;
         const qty = Math.floor(Number(qtyInput.value));
-        map.set(size, Number.isFinite(qty) && qty >= 0 ? qty : 0);
+        map.set(size, Number.isFinite(qty) && qty >= 1 ? qty : 0);
       });
       return map;
+    };
+
+    const validateStockUI = (cat) => {
+      const sizes = getSizesForCategory(cat);
+      if (!sizes || !sizeStockList || !sizeStockWrap || sizeStockWrap.hidden) return { ok: true };
+
+      const rows = Array.from(sizeStockList.querySelectorAll(".admin-stock-row"));
+      const checked = rows.filter((row) => {
+        const check = row.querySelector("input.admin-stock-check");
+        return check instanceof HTMLInputElement && check.checked;
+      });
+
+      if (!checked.length) {
+        return { ok: false, message: "Selecciona al menos una talla disponible." };
+      }
+
+      for (const row of checked) {
+        const size = row.getAttribute("data-size") || "";
+        const qtyInput = row.querySelector("input.admin-stock-qty");
+        if (!(qtyInput instanceof HTMLInputElement)) continue;
+        const qty = Math.floor(Number(qtyInput.value));
+        if (!Number.isFinite(qty) || qty < 1) {
+          qtyInput.disabled = false;
+          qtyInput.value = "1";
+          qtyInput.focus();
+          return { ok: false, message: `La talla ${size || "seleccionada"} debe tener 1 o más unidades.` };
+        }
+      }
+
+      return { ok: true };
     };
 
     const renderStockUI = (cat, seedMap) => {
@@ -391,10 +421,11 @@
       sizeStockWrap.hidden = false;
       sizeStockList.innerHTML = sizes
         .map((s) => {
-          const qty = seedMap instanceof Map && seedMap.has(s) ? seedMap.get(s) : 0;
+          const seedQty = seedMap instanceof Map && seedMap.has(s) ? Math.floor(Number(seedMap.get(s))) : 0;
           const checked = seedMap instanceof Map && seedMap.has(s);
+          const qty = checked && Number.isFinite(seedQty) && seedQty >= 1 ? seedQty : checked ? 1 : 0;
           const disabled = checked ? "" : "disabled";
-          return `<div class="admin-stock-row" data-size="${s}"><input class="admin-stock-check" type="checkbox" ${checked ? "checked" : ""} aria-label="Usar talla ${s}" /><span class="admin-stock-size">${s}</span><input class="admin-stock-qty" type="number" min="0" step="1" value="${qty}" ${disabled} aria-label="Unidades para talla ${s}" /></div>`;
+          return `<div class="admin-stock-row" data-size="${s}"><input class="admin-stock-check" type="checkbox" ${checked ? "checked" : ""} aria-label="Usar talla ${s}" /><span class="admin-stock-size">${s}</span><input class="admin-stock-qty" type="number" min="1" step="1" value="${qty}" ${disabled} aria-label="Unidades para talla ${s}" /></div>`;
         })
         .join("");
 
@@ -411,7 +442,10 @@
             const qtyInput = row.querySelector("input.admin-stock-qty");
             if (!(qtyInput instanceof HTMLInputElement)) return;
             qtyInput.disabled = !t.checked;
-            if (t.checked && qtyInput.value === "") qtyInput.value = "0";
+            if (t.checked) {
+              const raw = Math.floor(Number(qtyInput.value));
+              if (!Number.isFinite(raw) || raw < 1) qtyInput.value = "1";
+            }
           },
           { passive: true }
         );
@@ -534,6 +568,13 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      const stockCheck = validateStockUI(categoryInput.value);
+      if (!stockCheck.ok) {
+        message.textContent = stockCheck.message || "Revisa el inventario por talla.";
+        return;
+      }
+
       message.textContent = idInput.value ? "Actualizando..." : "Publicando...";
 
       const fd = new FormData();

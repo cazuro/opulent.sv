@@ -1,9 +1,10 @@
-const fs = require("fs")
 const path = require("path")
 const express = require("express")
 const mongoose = require("mongoose")
 const bcrypt = require("bcryptjs")
 const multer = require("multer")
+const cloudinary = require("cloudinary").v2
+const { CloudinaryStorage } = require("multer-storage-cloudinary")
 const dotenv = require("dotenv")
 const cookieParser = require("cookie-parser")
 const app = express()
@@ -75,19 +76,28 @@ const productSchema = new mongoose.Schema(
 
 const Product = mongoose.models.Product || mongoose.model("Product", productSchema)
 
-const uploadsDir = path.join(__dirname, "public", "uploads")
-fs.mkdirSync(uploadsDir, { recursive: true })
+const categoryRequiresStockBySize = (category) => {
+  const c = String(category || "").trim()
+  return c === "Camisas" || c === "Louis Vuitton" || c === "Dior" || c === "Lacoste"
+}
 
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadsDir),
-    filename: (req, file, cb) => {
-      const safeExt = path.extname(file.originalname || "").slice(0, 10)
-      const unique = `${Date.now()}-${Math.random().toString(16).slice(2)}`
-      cb(null, `${unique}${safeExt}`)
-    },
-  }),
+// ─── Cloudinary config ────────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 })
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "opulent/products",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+  },
+})
+
+const upload = multer({ storage })
+// ─────────────────────────────────────────────────────────────────────────────
 
 const requireAdminPage = (req, res, next) => {
   if (req.cookies?.opulent_admin === "1") return next()
@@ -150,60 +160,66 @@ app.post(
     { name: "images", maxCount: 20 },
   ]),
   async (req, res) => {
-  try {
-    const category = String(req.body?.category || "").trim()
-    const name = String(req.body?.name || "").trim()
-    const price = Number(req.body?.price)
-    const discountRaw = req.body?.discount
-    const discount = discountRaw === "" || discountRaw == null ? 0 : Number(discountRaw)
-    const stockRaw = req.body?.stockBySize
+    try {
+      const category = String(req.body?.category || "").trim()
+      const name = String(req.body?.name || "").trim()
+      const price = Number(req.body?.price)
+      const discountRaw = req.body?.discount
+      const discount = discountRaw === "" || discountRaw == null ? 0 : Number(discountRaw)
+      const stockRaw = req.body?.stockBySize
 
-    const normalizeStockBySize = (raw) => {
-      const str = String(raw == null ? "" : raw).trim()
-      if (!str) return []
-      let parsed
-      try {
-        parsed = JSON.parse(str)
-      } catch {
-        return []
+      const normalizeStockBySize = (raw, opts = {}) => {
+        const minQty = Number(opts?.minQty ?? 0)
+        const str = String(raw == null ? "" : raw).trim()
+        if (!str) return []
+        let parsed
+        try {
+          parsed = JSON.parse(str)
+        } catch {
+          return []
+        }
+        if (!Array.isArray(parsed)) return []
+        const out = []
+        const seen = new Set()
+        parsed.forEach((row) => {
+          const size = String(row?.size || "").trim()
+          const qty = Number(row?.qty)
+          if (!size) return
+          if (!Number.isFinite(qty) || qty < minQty) return
+          const key = size.toUpperCase()
+          if (seen.has(key)) return
+          seen.add(key)
+          out.push({ size, qty: Math.floor(qty) })
+        })
+        return out
       }
-      if (!Array.isArray(parsed)) return []
 
-      const out = []
-      const seen = new Set()
-      parsed.forEach((row) => {
-        const size = String(row?.size || "").trim()
-        const qty = Number(row?.qty)
-        if (!size) return
-        if (!Number.isFinite(qty) || qty < 0) return
-        const key = size.toUpperCase()
-        if (seen.has(key)) return
-        seen.add(key)
-        out.push({ size, qty: Math.floor(qty) })
-      })
-      return out
+      if (!category || !name || !Number.isFinite(price)) {
+        return res.status(400).json({ message: "Faltan datos." })
+      }
+
+      const coverFile = Array.isArray(req.files?.cover) ? req.files.cover[0] : null
+      const otherFiles = Array.isArray(req.files?.images) ? req.files.images : []
+
+      // Con Cloudinary, la URL permanente está en f.path
+      const otherImages = otherFiles.map((f) => f.path)
+      const coverImage = coverFile ? coverFile.path : otherImages.shift() || ""
+      const images = [coverImage, ...otherImages].filter(Boolean)
+
+      if (!images.length) {
+        return res.status(400).json({ message: "Sube al menos una imagen." })
+      }
+
+      const stockBySize = normalizeStockBySize(stockRaw, { minQty: categoryRequiresStockBySize(category) ? 1 : 0 })
+      if (categoryRequiresStockBySize(category) && !stockBySize.length) {
+        return res.status(400).json({ message: "Selecciona tallas y define unidades (mínimo 1)." })
+      }
+
+      const product = await Product.create({ category, name, price, discount, images, stockBySize })
+      res.status(201).json({ product })
+    } catch {
+      res.status(500).json({ message: "Error creando el producto." })
     }
-
-    if (!category || !name || !Number.isFinite(price)) {
-      return res.status(400).json({ message: "Faltan datos." })
-    }
-
-    const coverFile = Array.isArray(req.files?.cover) ? req.files.cover[0] : null
-    const otherFiles = Array.isArray(req.files?.images) ? req.files.images : []
-    const otherImages = otherFiles.map((f) => `/uploads/${f.filename}`)
-    const coverImage = coverFile ? `/uploads/${coverFile.filename}` : otherImages.shift() || ""
-    const images = [coverImage, ...otherImages].filter(Boolean)
-
-    if (!images.length) {
-      return res.status(400).json({ message: "Sube al menos una imagen." })
-    }
-
-    const stockBySize = normalizeStockBySize(stockRaw)
-    const product = await Product.create({ category, name, price, discount, images, stockBySize })
-    res.status(201).json({ product })
-  } catch {
-    res.status(500).json({ message: "Error creando el producto." })
-  }
   }
 )
 
@@ -215,87 +231,102 @@ app.put(
     { name: "images", maxCount: 20 },
   ]),
   async (req, res) => {
-  try {
-    const id = String(req.params.id || "")
-    const category = String(req.body?.category || "").trim()
-    const name = String(req.body?.name || "").trim()
-    const price = Number(req.body?.price)
-    const discountRaw = req.body?.discount
-    const discount = discountRaw === "" || discountRaw == null ? 0 : Number(discountRaw)
-    const replaceImages = String(req.body?.replaceImages || "") === "1"
-    const stockRaw = req.body?.stockBySize
+    try {
+      const id = String(req.params.id || "")
+      const category = String(req.body?.category || "").trim()
+      const name = String(req.body?.name || "").trim()
+      const price = Number(req.body?.price)
+      const discountRaw = req.body?.discount
+      const discount = discountRaw === "" || discountRaw == null ? 0 : Number(discountRaw)
+      const replaceImages = String(req.body?.replaceImages || "") === "1"
+      const stockRaw = req.body?.stockBySize
 
-    const normalizeStockBySize = (raw) => {
-      const str = String(raw == null ? "" : raw).trim()
-      if (!str) return []
-      let parsed
-      try {
-        parsed = JSON.parse(str)
-      } catch {
-        return []
+      const normalizeStockBySize = (raw, opts = {}) => {
+        const minQty = Number(opts?.minQty ?? 0)
+        const str = String(raw == null ? "" : raw).trim()
+        if (!str) return []
+        let parsed
+        try {
+          parsed = JSON.parse(str)
+        } catch {
+          return []
+        }
+        if (!Array.isArray(parsed)) return []
+        const out = []
+        const seen = new Set()
+        parsed.forEach((row) => {
+          const size = String(row?.size || "").trim()
+          const qty = Number(row?.qty)
+          if (!size) return
+          if (!Number.isFinite(qty) || qty < minQty) return
+          const key = size.toUpperCase()
+          if (seen.has(key)) return
+          seen.add(key)
+          out.push({ size, qty: Math.floor(qty) })
+        })
+        return out
       }
-      if (!Array.isArray(parsed)) return []
 
-      const out = []
-      const seen = new Set()
-      parsed.forEach((row) => {
-        const size = String(row?.size || "").trim()
-        const qty = Number(row?.qty)
-        if (!size) return
-        if (!Number.isFinite(qty) || qty < 0) return
-        const key = size.toUpperCase()
-        if (seen.has(key)) return
-        seen.add(key)
-        out.push({ size, qty: Math.floor(qty) })
-      })
-      return out
-    }
+      const product = await Product.findById(id)
+      if (!product) return res.status(404).json({ message: "Producto no encontrado." })
 
-    const product = await Product.findById(id)
-    if (!product) return res.status(404).json({ message: "Producto no encontrado." })
-
-    if (category) product.category = category
-    if (name) product.name = name
-    if (Number.isFinite(price)) product.price = price
-    if (Number.isFinite(discount)) product.discount = discount
-    if (stockRaw != null) product.stockBySize = normalizeStockBySize(stockRaw)
-
-    const coverFile = Array.isArray(req.files?.cover) ? req.files.cover[0] : null
-    const otherFiles = Array.isArray(req.files?.images) ? req.files.images : []
-    const newImages = otherFiles.map((f) => `/uploads/${f.filename}`)
-    const newCover = coverFile ? `/uploads/${coverFile.filename}` : ""
-
-    if (replaceImages && product.images?.length) {
-      product.images.forEach((p) => {
-        const abs = path.join(__dirname, "public", p.replace(/^\//, ""))
-        fs.unlink(abs, () => {})
-      })
-      product.images = []
-    }
-
-    if (replaceImages) {
-      if (newCover || newImages.length) {
-        const cover = newCover || newImages.shift() || ""
-        product.images = [cover, ...newImages].filter(Boolean)
+      if (category) product.category = category
+      if (name) product.name = name
+      if (Number.isFinite(price)) product.price = price
+      if (Number.isFinite(discount)) product.discount = discount
+      if (stockRaw != null) {
+        const effectiveCategory = category || product.category
+        const stockBySize = normalizeStockBySize(stockRaw, { minQty: categoryRequiresStockBySize(effectiveCategory) ? 1 : 0 })
+        if (categoryRequiresStockBySize(effectiveCategory) && !stockBySize.length) {
+          return res.status(400).json({ message: "Selecciona tallas y define unidades (mínimo 1)." })
+        }
+        product.stockBySize = stockBySize
       }
-    } else {
-      if (newCover) {
-        product.images = [newCover, ...(Array.isArray(product.images) ? product.images.filter((p) => p !== newCover) : [])]
-      }
-      if (newImages.length) {
-        if (!product.images?.length) {
-          product.images = newImages
-        } else {
-          product.images = [...product.images, ...newImages]
+
+      const coverFile = Array.isArray(req.files?.cover) ? req.files.cover[0] : null
+      const otherFiles = Array.isArray(req.files?.images) ? req.files.images : []
+
+      // Con Cloudinary, la URL permanente está en f.path
+      const newImages = otherFiles.map((f) => f.path)
+      const newCover = coverFile ? coverFile.path : ""
+
+      if (replaceImages) {
+        // Eliminar imágenes viejas de Cloudinary
+        if (Array.isArray(product.images)) {
+          for (const url of product.images) {
+            try {
+              // Extraer public_id de la URL de Cloudinary
+              const match = url.match(/\/opulent\/products\/([^.]+)/)
+              if (match) await cloudinary.uploader.destroy(`opulent/products/${match[1]}`)
+            } catch {
+              // ignorar errores de eliminación
+            }
+          }
+        }
+        product.images = []
+
+        if (newCover || newImages.length) {
+          const cover = newCover || newImages.shift() || ""
+          product.images = [cover, ...newImages].filter(Boolean)
+        }
+      } else {
+        if (newCover) {
+          product.images = [newCover, ...(Array.isArray(product.images) ? product.images.filter((p) => p !== newCover) : [])]
+        }
+        if (newImages.length) {
+          if (!product.images?.length) {
+            product.images = newImages
+          } else {
+            product.images = [...product.images, ...newImages]
+          }
         }
       }
-    }
 
-    await product.save()
-    res.json({ product })
-  } catch {
-    res.status(500).json({ message: "Error actualizando el producto." })
-  }
+      await product.save()
+      res.json({ product })
+    } catch {
+      res.status(500).json({ message: "Error actualizando el producto." })
+    }
   }
 )
 
@@ -305,11 +336,16 @@ app.delete("/api/admin/products/:id", requireAdminApi, async (req, res) => {
     const product = await Product.findByIdAndDelete(id).lean()
     if (!product) return res.status(404).json({ message: "Producto no encontrado." })
 
+    // Eliminar imágenes de Cloudinary al borrar producto
     if (Array.isArray(product.images)) {
-      product.images.forEach((p) => {
-        const abs = path.join(__dirname, "public", String(p).replace(/^\//, ""))
-        fs.unlink(abs, () => {})
-      })
+      for (const url of product.images) {
+        try {
+          const match = url.match(/\/opulent\/products\/([^.]+)/)
+          if (match) await cloudinary.uploader.destroy(`opulent/products/${match[1]}`)
+        } catch {
+          // ignorar errores de eliminación
+        }
+      }
     }
 
     res.json({ ok: true })

@@ -280,7 +280,15 @@
     gap: 22px;
     background: #ffffff;
     min-height: 0;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .pd-panel::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 
   .pd-panel-top {
@@ -296,6 +304,7 @@
   }
 
   .pd-badge {
+    flex: 0 0 auto;
     font-size: 11px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -307,12 +316,17 @@
   }
 
   .pd-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
     margin: 0;
     font-family: var(--serif);
     font-size: clamp(20px, 2.6vw, 32px);
     font-weight: 500;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .pd-price {
